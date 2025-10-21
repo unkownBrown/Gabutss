@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ArcadeHub - Demo</title>
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome untuk ikon -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Animasi kustom */
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        @keyframes slideOutRight {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        .animate-slide-in-right {
+            animation: slideInRight 0.3s ease-out forwards;
+        }
+        
+        .animate-slide-out-right {
+            animation: slideOutRight 0.3s ease-out forwards;
+        }
+        
+        .animate-pulse-once {
+            animation: pulse 0.5s ease-in-out;
+        }
+        
+        /* Styling untuk scrollbar */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 10px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white min-h-screen">
+    <!-- Notifikasi Toast Container -->
+    <div id="notification-container" class="fixed top-4 right-4 z-50 space-y-2 max-w-sm"></div>
+    
+    <!-- Login Screen -->
+    <div id="login-screen" class="min-h-screen flex flex-col items-center justify-center p-4 bg-gradient-to-br from-purple-900 to-indigo-800">
+        <div class="bg-gray-800 p-8 rounded-xl shadow-2xl w-full max-w-md">
+            <div class="text-center mb-8">
+                <h1 class="text-4xl font-bold text-yellow-400 mb-2">ArcadeHub</h1>
+                <p class="text-gray-300">Platform gaming sosial terbaik</p>
+            </div>
+            
+            <form id="login-form" class="space-y-4">
+                <div>
+                    <label for="email" class="block text-gray-300 mb-1">Email</label>
+                    <input type="email" id="email" required class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500">
+                </div>
+                
+                <div>
+                    <label for="password" class="block text-gray-300 mb-1">Password</label>
+                    <input type="password" id="password" required class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500">
+                </div>
+                
+                <button type="submit" class="w-full bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-bold py-2 px-4 rounded-lg transition duration-200">
+                    Masuk
+                </button>
+            </form>
+            
+            <div class="mt-6 text-center">
+                <p class="text-gray-400">Belum punya akun?</p>
+                <button id="register-btn" class="mt-2 text-yellow-400 hover:text-yellow-300 font-medium">
+                    Daftar Akun Demo
+                </button>
+            </div>
+            
+            <div class="mt-8 pt-6 border-t border-gray-700 text-center">
+                <button id="demo-login-btn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200">
+                    Login sebagai Demo User
+                </button>
+                <p class="text-xs text-gray-400 mt-2">Menggunakan akun demo yang sudah ada</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Main App (Awalnya tersembunyi) -->
+    <div id="main-app" class="hidden min-h-screen">
+        <!-- Header -->
+        <header class="bg-gray-800 p-4 flex justify-between items-center shadow-lg">
+            <div class="flex items-center">
+                <!-- Hamburger Menu Button -->
+                <button id="menu-toggle" class="p-2 rounded-lg hover:bg-gray-700 mr-2">
+                    <i class="fas fa-bars text-xl"></i>
+                </button>
+                
+                <h1 class="text-2xl font-bold text-yellow-400">ArcadeHub</h1>
+            </div>
+            
+            <div class="flex items-center space-x-4">
+                <!-- Sound Toggle -->
+                <button id="sound-toggle" class="p-2 rounded-lg hover:bg-gray-700">
+                    <i class="fas fa-volume-up text-xl"></i>
+                </button>
+                
+                <!-- Settings Button -->
+                <button id="settings-btn" class="p-2 rounded-lg hover:bg-gray-700">
+                    <i class="fas fa-cog text-xl"></i>
+                </button>
+                
+                <!-- User Info -->
+                <div id="user-info" class="flex items-center space-x-2">
+                    <div class="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center font-bold">
+                        <span id="user-initial">U</span>
+                    </div>
+                    <span id="username" class="font-medium">User</span>
+                </div>
+                
+                <!-- Logout Button -->
+                <button id="logout-btn" class="bg-red-600 hover:bg-red-700 text-white py-1 px-3 rounded-lg text-sm">
+                    Keluar
+                </button>
+            </div>
+        </header>
+        
+        <!-- Main Content -->
+        <main class="p-4">
+            <!-- Search Bar -->
+            <div class="mb-6">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div class="relative flex-1">
+                        <input type="text" id="search-games" placeholder="Cari game..." class="w-full px-4 py-2 pl-10 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500">
+                        <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                    </div>
+                    
+                    <div class="flex space-x-2 overflow-x-auto pb-2 md:pb-0">
+                        <button class="filter-btn px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg whitespace-nowrap transition duration-200" data-category="all">Semua</button>
+                        <button class="filter-btn px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg whitespace-nowrap transition duration-200" data-category="action">Aksi</button>
+                        <button class="filter-btn px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg whitespace-nowrap transition duration-200" data-category="adventure">Petualangan</button>
+                        <button class="filter-btn px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg whitespace-nowrap transition duration-200" data-category="puzzle">Teka-teki</button>
+                        <button class="filter-btn px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg whitespace-nowrap transition duration-200" data-category="sports">Olahraga</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Games Grid -->
+            <div id="games-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Game cards akan diisi oleh JavaScript -->
+            </div>
+        </main>
+        
+        <!-- Sidebar Menu -->
+        <div id="sidebar" class="fixed top-0 left-0 h-full w-80 bg-gray-800 shadow-xl transform -translate-x-full transition-transform duration-300 z-40">
+            <div class="p-4 border-b border-gray-700 flex justify-between items-center">
+                <h2 class="text-xl font-bold">Menu</h2>
+                <button id="close-menu" class="p-2 rounded-lg hover:bg-gray-700">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <div class="p-4">
+                <h3 class="text-lg font-semibold mb-4">Daftar Teman</h3>
+                <div id="friends-list" class="space-y-3 max-h-60 overflow-y-auto custom-scrollbar">
+                    <!-- Daftar teman akan diisi oleh JavaScript -->
+                </div>
+                
+                <div class="mt-6">
+                    <button id="add-friend-btn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded-lg transition duration-200">
+                        <i class="fas fa-user-plus mr-2"></i>Tambah Teman
+                    </button>
+                </div>
+                
+                <div class="mt-6">
+                    <h3 class="text-lg font-semibold mb-2">Permintaan Pertemanan</h3>
+                    <div id="friend-requests" class="space-y-3 max-h-40 overflow-y-auto custom-scrollbar">
+                        <!-- Permintaan pertemanan akan diisi oleh JavaScript -->
+                    </div>
+                </div>
+                
+                <div class="mt-8 pt-6 border-t border-gray-700">
+                    <h3 class="text-lg font-semibold mb-2">Kode Teman Saya</h3>
+                    <div class="flex items-center justify-between bg-gray-700 p-3 rounded-lg">
+                        <code id="my-friend-code" class="font-mono text-yellow-400">XXXX-XXXX-XXXX</code>
+                        <button id="copy-friend-code" class="p-1 rounded hover:bg-gray-600">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                    <p class="text-xs text-gray-400 mt-2">Bagikan kode ini untuk ditambahkan sebagai teman</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Overlay untuk sidebar -->
+        <div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-30 hidden"></div>
+        
+        <!-- Chat Panel -->
+        <div id="chat-panel" class="fixed bottom-0 right-4 w-80 bg-gray-800 rounded-t-lg shadow-xl transform translate-y-full transition-transform duration-300 z-40">
+            <div class="p-3 bg-gray-700 rounded-t-lg flex justify-between items-center">
+                <div class="flex items-center space-x-2">
+                    <div class="w-3 h-3 bg-green-500 rounded-full"></div>
+                    <h3 id="chat-friend-name" class="font-semibold">Nama Teman</h3>
+                </div>
+                <button id="close-chat" class="p-1 rounded hover:bg-gray-600">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div id="chat-messages" class="p-4 h-64 overflow-y-auto custom-scrollbar">
+                <!-- Pesan chat akan diisi oleh JavaScript -->
+            </div>
+            
+            <div class="p-3 border-t border-gray-700">
+                <div class="flex space-x-2">
+                    <input type="text" id="chat-input" placeholder="Ketik pesan..." class="flex-1 px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-1 focus:ring-yellow-500">
+                    <button id="send-message" class="bg-yellow-500 hover:bg-yellow-600 text-gray-900 px-3 py-2 rounded-lg transition duration-200">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+                <div class="mt-2">
+                    <input type="file" id="chat-image-upload" class="hidden" accept="image/*">
+                    <button id="upload-image-btn" class="text-xs text-gray-400 hover:text-gray-300">
+                        <i class="fas fa-image mr-1"></i>Unggah Gambar
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Game Modal -->
+        <div id="game-modal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 hidden">
+            <div class="bg-gray-800 rounded-xl w-full max-w-4xl mx-4 max-h-[90vh] overflow-hidden">
+                <div class="p-4 border-b border-gray-700 flex justify-between items-center">
+                    <h2 id="game-modal-title" class="text-xl font-bold">Judul Game</h2>
+                    <button id="close-game-modal" class="p-2 rounded-lg hover:bg-gray-700">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                
+                <div class="p-4">
+                    <!-- Area Game -->
+                    <div class="bg-black rounded-lg mb-4 flex items-center justify-center h-64">
+                        <div id="game-area" class="text-center">
+                            <p class="text-gray-400 mb-4">Area Game (Placeholder)</p>
+                            <div class="w-32 h-32 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg mx-auto flex items-center justify-center">
+                                <i class="fas fa-gamepad text-4xl text-white"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Game Controls -->
+                    <div class="flex justify-between mb-6">
+                        <button id="fullscreen-btn" class="bg-gray-700 hover:bg-gray-600 text-white py-2 px-4 rounded-lg transition duration-200">
+                            <i class="fas fa-expand mr-2"></i>Layar Penuh
+                        </button>
+                        <button id="back-to-menu" class="bg-yellow-500 hover:bg-yellow-600 text-gray-900 py-2 px-4 rounded-lg transition duration-200">
+                            <i class="fas fa-arrow-left mr-2"></i>Kembali ke Menu
+                        </button>
+                    </div>
+                    
+                    <!-- Komentar Section -->
+                    <div>
+                        <h3 class="text-lg font-semibold mb-4">Komentar</h3>
+                        
+                        <!-- Form Komentar -->
+                        <div class="mb-4">
+                            <textarea id="comment-input" placeholder="Tulis komentar..." class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 h-20"></textarea>
+                            <button id="submit-comment" class="mt-2 bg-yellow-500 hover:bg-yellow-600 text-gray-900 py-2 px-4 rounded-lg transition duration-200">
+                                Kirim Komentar
+                            </button>
+                        </div>
+                        
+                        <!-- Daftar Komentar -->
+                        <div id="comments-list" class="space-y-4 max-h-60 overflow-y-auto custom-scrollbar">
+                            <!-- Komentar akan diisi oleh JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Add Friend Modal -->
+        <div id="add-friend-modal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 hidden">
+            <div class="bg-gray-800 rounded-xl w-full max-w-md mx-4 p-6">
+                <h2 class="text-xl font-bold mb-4">Tambah Teman</h2>
+                
+                <div class="mb-4">
+                    <label for="friend-code-input" class="block text-gray-300 mb-2">Masukkan Kode Teman</label>
+                    <input type="text" id="friend-code-input" placeholder="XXXX-XXXX-XXXX" class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500">
+                </div>
+                
+                <div class="flex justify-end space-x-3">
+                    <button id="cancel-add-friend" class="bg-gray-700 hover:bg-gray-600 text-white py-2 px-4 rounded-lg transition duration-200">
+                        Batal
+                    </button>
+                    <button id="send-friend-request" class="bg-yellow-500 hover:bg-yellow-600 text-gray-900 py-2 px-4 rounded-lg transition duration-200">
+                        Kirim Permintaan
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Settings Modal -->
+        <div id="settings-modal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 hidden">
+            <div class="bg-gray-800 rounded-xl w-full max-w-md mx-4 p-6">
+                <h2 class="text-xl font-bold mb-6">Pengaturan</h2>
+                
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center">
+                        <span>Efek Suara</span>
+                        <button id="toggle-sound" class="bg-gray-700 hover:bg-gray-600 text-white py-1 px-3 rounded-lg transition duration-200">
+                            Aktif
+                        </button>
+                    </div>
+                    
+                    <div class="pt-4 border-t border-gray-700">
+                        <button id="clear-data" class="w-full bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-lg transition duration-200">
+                            Hapus Data Demo
+                        </button>
+                        <p class="text-xs text-gray-400 mt-2">Ini akan menghapus semua data yang disimpan di browser</p>
+                    </div>
+                </div>
+                
+                <div class="mt-6 flex justify-end">
+                    <button id="close-settings" class="bg-gray-700 hover:bg-gray-600 text-white py-2 px-4 rounded-lg transition duration-200">
+                        Tutup
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Audio Elements untuk Sound Effects -->
+    <audio id="click-sound" preload="auto">
+        <source src="data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==" type="audio/wav">
+    </audio>
+    <audio id="notification-sound" preload="auto">
+        <source src="data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==" type="audio/wav">
+    </audio>
+    <audio id="success-sound" preload="auto">
+        <source src="data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==" type="audio/wav">
+    </audio>
+
+    <script>
+        // ==============================
+        // KONFIGURASI DAN INISIALISASI
+        // ==============================
+        
+        // Key untuk localStorage
+        const STORAGE_KEYS = {
+            USERS: 'arcadehub_users',
+            ACTIVE_USER: 'arcadehub_active_user',
+            ACTIVE_USERS: 'arcadehub_active_users',
+            GAMES: 'arcadehub_games',
+            COMMENTS: 'arcadehub_comments',
+            FRIENDS: 'arcadehub_friends',
+            FRIEND_REQUESTS: 'arcadehub_friend_requests',
+            CHATS: 'arcadehub_chats',
+            SETTINGS: 'arcadehub_settings'
+        };
+        
+        // Data demo awal
+        const DEMO_DATA = {
+            users: [
+                { id: 'user1', email: 'demo1@arcadehub.com', password: 'demo123', username: 'GamerPro', friendCode: 'AZZD-JKAZ-67HK' },
+                { id: 'user2', email: 'demo2@arcadehub.com', password: 'demo123', username: 'GameMaster', friendCode: 'BXXF-MNBX-89LM' },
+                { id: 'user3', email: 'demo3@arcadehub.com', password: 'demo123', username: 'ArcadeKing', friendCode: 'CYYG-OPCY-12NO' }
+            ],
+            games: [
+                { id: 'game1', title: 'Space Adventure', category: 'action', rating: 4.
